@@ -8,65 +8,26 @@ import { guard, log, output } from './log';
 import { showSqlResults } from './ui/sqlView';
 import { openIbmiTerminal } from './ui/terminal';
 import { CreateDsOptions, Job } from './zos/zosmf';
+import { Ui } from './ui/helpers';
+import { afterSubmit as afterSubmitJob, registerZosCommands } from './zos/zosCommands';
+import { registerIbmiCommands } from './ibmi/ibmiCommands';
+import { registerGeneralCommands } from './general';
 
 export function registerCommands(ctx: vscode.ExtensionContext, store: ProfileStore, sessions: Sessions, zosTree: ZosTree, ibmiTree: IbmiTree) {
   const diags = vscode.languages.createDiagnosticCollection('ibmi-compile');
   ctx.subscriptions.push(diags);
 
-  const reg = (id: string, fn: (...a: any[]) => any) => ctx.subscriptions.push(vscode.commands.registerCommand(id, fn));
+  const ui = new Ui(ctx, store);
+  const reg = ui.reg.bind(ui);
   const treeOf = (n?: Node) => (n?.ctx.startsWith('zos') || n?.ctx === 'profile-zos') ? zosTree : ibmiTree;
-
-  async function pickProfile(type: ProfileType, n?: Node): Promise<Profile | undefined> {
-    if (n?.pid) { return store.get(n.pid); }
-    const ed = vscode.window.activeTextEditor?.document.uri;
-    if (ed?.scheme === SCHEME) {
-      const p = store.get(ed.authority);
-      if (p?.type === type) { return p; }
-    }
-    const list = store.byType(type);
-    if (list.length === 0) {
-      vscode.window.showWarningMessage(`No ${type === 'zos' ? 'z/OS' : 'IBM i'} connection defined.`, 'Add Connection')
-        .then(a => a && vscode.commands.executeCommand(type === 'zos' ? 'mf.addZosProfile' : 'mf.addIbmiProfile'));
-      return;
-    }
-    if (list.length === 1) { return list[0]; }
-    const pick = await vscode.window.showQuickPick(list.map(p => ({ label: p.name, description: `${p.user}@${p.host}`, p })), { title: 'Select connection' });
-    return pick?.p;
-  }
-
-  async function updateProfile(id: string, fn: (p: Profile) => void) {
-    const p = store.get(id); if (!p) { return; }
-    fn(p); await store.save(p);
-  }
-
-  async function confirm(msg: string): Promise<boolean> {
-    return (await vscode.window.showWarningMessage(msg, { modal: true }, 'Yes')) === 'Yes';
-  }
-
-  /** Input box with a remembered history shown as a quick pick. */
-  async function historyInput(key: string, title: string, placeholder: string): Promise<string | undefined> {
-    const hist = ctx.globalState.get<string[]>(key, []);
-    const qp = vscode.window.createQuickPick();
-    qp.title = title; qp.placeholder = placeholder; qp.ignoreFocusOut = true;
-    qp.items = hist.map(h => ({ label: h }));
-    const val = await new Promise<string | undefined>(res => {
-      qp.onDidAccept(() => { res(qp.selectedItems[0]?.label ?? qp.value); qp.hide(); });
-      qp.onDidHide(() => res(undefined));
-      qp.onDidChangeValue(v => { qp.items = [...(v ? [{ label: v }] : []), ...hist.filter(h => h !== v).map(h => ({ label: h }))]; });
-      qp.show();
-    });
-    qp.dispose();
-    if (val?.trim()) {
-      await ctx.globalState.update(key, [val.trim(), ...hist.filter(h => h !== val.trim())].slice(0, 50));
-      return val.trim();
-    }
-    return undefined;
-  }
-
-  function showText(header: string, text: string) {
-    const o = output();
-    o.appendLine(''); o.appendLine(`──── ${header} ────`); o.appendLine(text.trimEnd()); o.show(true);
-  }
+  const pickProfile = ui.pickProfile.bind(ui);
+  const updateProfile = ui.updateProfile.bind(ui);
+  const confirm = ui.confirm.bind(ui);
+  const historyInput = ui.historyInput.bind(ui);
+  const showText = ui.showText.bind(ui);
+  registerZosCommands(ui, sessions, zosTree);
+  registerIbmiCommands(ui, store, sessions, ibmiTree);
+  registerGeneralCommands(ui, store);
 
   // ===================================================== profiles
   reg('mf.addZosProfile', async () => { const p = await profileWizard('zos'); if (p) { await store.save(p); vscode.commands.executeCommand('mf.testConnection', undefined, p.id); } });
@@ -200,23 +161,7 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: ProfileSto
     zosTree.refresh(n);
   });
 
-  async function afterSubmit(pid: string, job: Job) {
-    log(`Submitted ${job.jobname}(${job.jobid})`);
-    zosTree.refresh();
-    const a = await vscode.window.showInformationMessage(`Job ${job.jobname}(${job.jobid}) submitted.`, 'Wait & Show Output', 'Show Output Now');
-    if (!a) { return; }
-    if (a === 'Wait & Show Output') {
-      await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Waiting for ${job.jobname}(${job.jobid})`, cancellable: true }, async (_p, tok) => {
-        for (let i = 0; i < 120 && !tok.isCancellationRequested; i++) {
-          const s = await sessions.zosClient(pid).jobStatus(job.jobname, job.jobid);
-          if (s.status === 'OUTPUT') { vscode.window.showInformationMessage(`${job.jobname}(${job.jobid}) ended: ${s.retcode}`); break; }
-          await new Promise(r => setTimeout(r, 2000));
-        }
-      });
-    }
-    zosTree.refresh();
-    vscode.commands.executeCommand('vscode.open', uris.zosAllSpool(pid, job.jobname, job.jobid), { preview: false });
-  }
+  const afterSubmit = (pid: string, job: Job) => afterSubmitJob(sessions, zosTree, pid, job);
   reg('mf.zos.submitJcl', async () => {
     const ed = vscode.window.activeTextEditor; if (!ed) { return; }
     const p = await pickProfile('zos'); if (!p) { return; }

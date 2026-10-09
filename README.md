@@ -6,12 +6,19 @@ A Visual Studio Code extension that works with **IBM i** (over SSH) and **z/OS**
   - Work with data sets, PDS/PDSE members and USS files: browse, edit, and save straight back to the host.
   - Submit JCL, follow jobs and read spool output.
   - Run TSO and MVS console commands.
+  - Search, copy, rename, download and upload members; generate compile/link/run JCL from templates.
 - **IBM i**
-  - Work with libraries, source members and IFS files.
+  - Work with libraries, source members and IFS files; search in source files and IFS folders.
+  - Set the library list and current library used by CL commands and compiles.
   - Compile members, with errors shown in the Problems panel.
   - Run CL commands and SQL (results in a sortable grid with CSV export).
-  - View spooled files, active jobs and job logs.
+  - View spooled files, active jobs and job logs; read and reply to QSYSOPR messages.
+  - Object actions: rename, delete, DSPOBJD, DSPPGMREF, DSPFFD, query file data.
   - Open an SSH (PASE) terminal.
+- **Both**
+  - Favorites, compare with a local file, export/import connections, snippets for JCL, COBOL, RPGLE and CL.
+
+📖 **Full documentation:** <https://gauravgupta0612.github.io/IBM-i-z-OS-Explorer-doc/>
 
 Author: **Gaurav Gupta** · License: MIT
 

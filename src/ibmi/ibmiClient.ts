@@ -11,6 +11,7 @@ export interface LibObject { name: string; type: string; attribute: string; text
 export interface SrcMember { name: string; type: string; text: string; changed?: string; }
 export interface IfsEntry { name: string; isDir: boolean; size: number; mtime: number; }
 export interface SpoolEntry { name: string; job: string; number: number; status: string; pages: string; created: string; userData: string; }
+export interface MessageEntry { key: string; id: string; type: string; severity: number; time: string; fromUser: string; fromJob: string; text: string; answered: boolean; }
 export interface ActiveJob { job: string; status: string; type: string; subsystem: string; function: string; }
 
 /** Single-quote a string for a POSIX shell. */
@@ -63,7 +64,7 @@ export class IbmiClient {
   private hasDb2util?: boolean;
 
   constructor(public readonly profile: Profile, private password: () => Promise<string>,
-              private opts: () => { tempDir: string; ccsid: number }) {}
+              private opts: () => { tempDir: string; ccsid: number; libraryList: string[]; currentLibrary?: string }) {}
 
   get connected() { return !!this.conn; }
 
@@ -112,6 +113,22 @@ export class IbmiClient {
     });
   }
 
+  /** Run a script through an interpreter's standard input (used for Qshell). */
+  async execScript(interpreter: string, script: string): Promise<ExecResult> {
+    const c = await this.connect();
+    log(`[IBM i ${this.profile.name}] ${interpreter} <<< ${script.replace(/\n/g, ' ; ').slice(0, 300)}`);
+    return new Promise((resolve, reject) => {
+      c.exec(interpreter, (err, stream) => {
+        if (err) { return reject(err); }
+        const out: Buffer[] = [], errb: Buffer[] = [];
+        stream.on('data', (d: Buffer) => out.push(d));
+        stream.stderr.on('data', (d: Buffer) => errb.push(d));
+        stream.on('close', (code: number) => resolve({ code: code ?? 0, stdout: Buffer.concat(out).toString('utf8'), stderr: Buffer.concat(errb).toString('utf8') }));
+        stream.end(script.endsWith('\n') ? script : script + '\n');
+      });
+    });
+  }
+
   async shell(window: { rows: number; cols: number }): Promise<ClientChannel> {
     const c = await this.connect();
     return new Promise((resolve, reject) => c.shell({ term: 'xterm-256color', rows: window.rows, cols: window.cols }, (e, s) => e ? reject(e) : resolve(s)));
@@ -129,7 +146,19 @@ export class IbmiClient {
   // ---------------- CL ----------------
   /** Run a CL command; throws when the command ends in error (non-zero exit). */
   async cl(cmd: string, throwOnError = true): Promise<ExecResult> {
-    const r = await this.exec(`/QOpenSys/usr/bin/system ${shq(cmd)}`);
+    const { libraryList, currentLibrary } = this.opts();
+    let r: ExecResult;
+    if (libraryList.length || currentLibrary) {
+      // Qshell keeps one job for the script: liblist changes it, and `system` inherits it.
+      const lines: string[] = [];
+      if (currentLibrary) { lines.push(`liblist -c ${shq(currentLibrary)}`); }
+      if (libraryList.length) { lines.push(`liblist -a ${[...libraryList].reverse().map(shq).join(' ')}`); }
+      lines.push(`system ${shq(cmd)}`);
+      r = await this.execScript('/QOpenSys/usr/bin/qsh', lines.join('\n'));
+      r.stderr = r.stderr.split('\n').filter(l => !/liblist/i.test(l)).join('\n');
+    } else {
+      r = await this.exec(`/QOpenSys/usr/bin/system ${shq(cmd)}`);
+    }
     if (throwOnError && r.code !== 0) {
       throw new Error(`${cmd.split(' ')[0]}: ${(r.stderr || r.stdout).trim().split('\n').slice(-6).join(' ')}`);
     }
@@ -287,6 +316,62 @@ export class IbmiClient {
     return rows.map(r => `${r.TS ?? ''}  ${(r.MSGID ?? '').padEnd(7)} ${(r.MESSAGE_TYPE ?? '').padEnd(12)} ${r.MESSAGE_TEXT ?? ''}`).join('\n');
   }
   async endJob(job: string) { await this.cl(`ENDJOB JOB(${job}) OPTION(*IMMED)`); }
+
+  // ---------------- Search ----------------
+  /** Search source members of one or more source files (Qshell grep, like Code for IBM i). */
+  async searchMembers(lib: string, files: string[], term: string): Promise<Array<{ lib: string; file: string; mbr: string; line: number; text: string }>> {
+    const globs = files.map(f => shq(`/QSYS.LIB/${lib.toUpperCase()}.LIB/${f.toUpperCase()}.FILE/`) + '*.MBR').join(' ');
+    const r = await this.execScript('/QOpenSys/usr/bin/qsh', `/usr/bin/grep -inF ${shq(term)} ${globs} /dev/null`);
+    const hits: Array<{ lib: string; file: string; mbr: string; line: number; text: string }> = [];
+    for (const l of r.stdout.split('\n')) {
+      const m = /^\/QSYS\.LIB\/([^/]+)\.LIB\/([^/]+)\.FILE\/([^/]+)\.MBR:(\d+):(.*)$/i.exec(l);
+      if (m) { hits.push({ lib: m[1], file: m[2], mbr: m[3], line: Number(m[4]) - 1, text: m[5] }); }
+    }
+    return hits;
+  }
+  /** Search text files below an IFS directory. */
+  async searchIfs(dir: string, term: string, max = 500): Promise<Array<{ path: string; line: number; text: string }>> {
+    // GNU grep (yum) skips binary files with -I; the AIX grep in /QOpenSys/usr/bin has no -I.
+    const r = await this.exec(`if [ -x /QOpenSys/pkgs/bin/grep ]; then /QOpenSys/pkgs/bin/grep -rniIF -- ${shq(term)} ${shq(dir)}; ` +
+      `else /QOpenSys/usr/bin/grep -rniF ${shq(term)} ${shq(dir)}; fi | head -${max}`);
+    const hits = r.stdout.split('\n').map(l => /^(.*?):(\d+):(.*)$/.exec(l)).filter((m): m is RegExpExecArray => !!m)
+      .map(m => ({ path: m[1], line: Number(m[2]) - 1, text: m[3] }));
+    if (!hits.length && /illegal option|invalid option|usage:/i.test(r.stderr)) { throw new Error(r.stderr.trim().split('\n')[0]); }
+    return hits;
+  }
+
+  // ---------------- Objects ----------------
+  async deleteObject(lib: string, name: string, type: string) { await this.cl(`DLTOBJ OBJ(${lib}/${name}) OBJTYPE(${type})`); }
+  async renameObject(lib: string, name: string, type: string, newName: string) { await this.cl(`RNMOBJ OBJ(${lib}/${name}) OBJTYPE(${type}) NEWOBJ(${newName})`); }
+  /** Run a CL command with OUTPUT(*PRINT) and return its printed output. */
+  async printOutput(cmd: string): Promise<string> {
+    const r = await this.cl(cmd, false);
+    if (r.code !== 0 && !r.stdout.trim()) { throw new Error((r.stderr || `${cmd} failed`).trim()); }
+    return r.stdout;
+  }
+
+  // ---------------- Messages ----------------
+  async listMessages(queueLib: string, queue: string, max = 200): Promise<MessageEntry[]> {
+    const { rows } = await this.sql(
+      `select hex(MESSAGE_KEY) as MSGKEY, coalesce(MESSAGE_ID,'') as MSGID, MESSAGE_TYPE, SEVERITY, varchar(MESSAGE_TIMESTAMP) as TS, ` +
+      `coalesce(FROM_USER,'') as FROMUSR, coalesce(FROM_JOB,'') as FROMJOB, MESSAGE_TEXT, ` +
+      `case when MESSAGE_TYPE = 'INQUIRY' and exists (select 1 from QSYS2.MESSAGE_QUEUE_INFO r where r.MESSAGE_TYPE = 'REPLY' ` +
+      `and r.ASSOCIATED_MESSAGE_KEY = m.MESSAGE_KEY and r.MESSAGE_QUEUE_LIBRARY = m.MESSAGE_QUEUE_LIBRARY and r.MESSAGE_QUEUE_NAME = m.MESSAGE_QUEUE_NAME) ` +
+      `then 'Y' else 'N' end as ANSWERED ` +
+      `from QSYS2.MESSAGE_QUEUE_INFO m where MESSAGE_QUEUE_LIBRARY = ${sqlq(queueLib.toUpperCase())} and MESSAGE_QUEUE_NAME = ${sqlq(queue.toUpperCase())} ` +
+      `order by MESSAGE_TIMESTAMP desc fetch first ${max} rows only`);
+    return rows.map(r => ({ key: r.MSGKEY ?? '', id: r.MSGID ?? '', type: r.MESSAGE_TYPE ?? '', severity: Number(r.SEVERITY ?? 0),
+      time: r.TS ?? '', fromUser: r.FROMUSR ?? '', fromJob: r.FROMJOB ?? '', text: r.MESSAGE_TEXT ?? '', answered: r.ANSWERED === 'Y' }));
+  }
+  async messageHelp(queueLib: string, queue: string, key: string): Promise<string> {
+    const { rows } = await this.sql(
+      `select MESSAGE_TEXT, coalesce(MESSAGE_SECOND_LEVEL_TEXT,'') as HELP from QSYS2.MESSAGE_QUEUE_INFO ` +
+      `where MESSAGE_QUEUE_LIBRARY = ${sqlq(queueLib.toUpperCase())} and MESSAGE_QUEUE_NAME = ${sqlq(queue.toUpperCase())} and hex(MESSAGE_KEY) = ${sqlq(key)}`);
+    return rows.length ? `${rows[0].MESSAGE_TEXT}\n\n${rows[0].HELP}` : '';
+  }
+  async replyMessage(queueLib: string, queue: string, key: string, reply: string) {
+    await this.cl(`SNDRPY MSGKEY(X'${key}') MSGQ(${queueLib}/${queue}) RPY(${clq(reply)}) RMV(*NO)`);
+  }
 
   /** Compile errors from the EVFEVENT member written by OPTION(*EVENTF). */
   async eventFile(lib: string, mbr: string): Promise<string[]> {

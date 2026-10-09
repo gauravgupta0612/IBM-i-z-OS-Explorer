@@ -1,0 +1,198 @@
+{
+  "Job card": {
+    "prefix": [
+      "jobcard",
+      "job"
+    ],
+    "description": "JOB statement",
+    "body": [
+      "//${1:JOBNAME} JOB (${2:ACCT}),'${3:NAME}',CLASS=${4:A},MSGCLASS=${5:X},",
+      "//         MSGLEVEL=(1,1),NOTIFY=&SYSUID",
+      "$0"
+    ]
+  },
+  "EXEC PGM": {
+    "prefix": [
+      "exec",
+      "step"
+    ],
+    "description": "Program step",
+    "body": [
+      "//${1:STEP1}    EXEC PGM=${2:PROGRAM}",
+      "//STEPLIB  DD DISP=SHR,DSN=${3:&SYSUID..LOAD}",
+      "//SYSOUT   DD SYSOUT=*",
+      "//SYSPRINT DD SYSOUT=*",
+      "$0"
+    ]
+  },
+  "DD existing": {
+    "prefix": [
+      "ddshr",
+      "dd"
+    ],
+    "description": "DD for an existing data set",
+    "body": [
+      "//${1:DDNAME}   DD DISP=SHR,DSN=${2:HLQ.DATA.SET}$0"
+    ]
+  },
+  "DD new data set": {
+    "prefix": [
+      "ddnew"
+    ],
+    "description": "DD that creates a new data set",
+    "body": [
+      "//${1:DDNAME}   DD DSN=${2:&SYSUID..NEW.DATA},",
+      "//            DISP=(NEW,CATLG,DELETE),",
+      "//            SPACE=(${3|TRK,CYL|},(${4:5},${5:5}),RLSE),",
+      "//            DCB=(RECFM=${6|FB,VB,FBA,U|},LRECL=${7:80},BLKSIZE=0)$0"
+    ]
+  },
+  "DD instream": {
+    "prefix": [
+      "ddin",
+      "sysin"
+    ],
+    "description": "In-stream data",
+    "body": [
+      "//${1:SYSIN}    DD *",
+      "${2:data}",
+      "/*$0"
+    ]
+  },
+  "IEFBR14 allocate PDS": {
+    "prefix": [
+      "iefbr14",
+      "allocpds"
+    ],
+    "description": "Allocate a PDSE with IEFBR14",
+    "body": [
+      "//ALLOC    EXEC PGM=IEFBR14",
+      "//NEWPDS   DD DSN=${1:&SYSUID..NEW.PDS},",
+      "//            DISP=(NEW,CATLG,DELETE),",
+      "//            SPACE=(CYL,(5,5,10)),DSNTYPE=LIBRARY,",
+      "//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=0)$0"
+    ]
+  },
+  "IEFBR14 delete": {
+    "prefix": [
+      "delete",
+      "iefbr14del"
+    ],
+    "description": "Delete a data set with IEFBR14",
+    "body": [
+      "//DELETE   EXEC PGM=IEFBR14",
+      "//DD1      DD DSN=${1:HLQ.DATA.SET},DISP=(MOD,DELETE,DELETE),",
+      "//            SPACE=(TRK,(1,1))$0"
+    ]
+  },
+  "IEBCOPY copy members": {
+    "prefix": [
+      "iebcopy"
+    ],
+    "description": "Copy PDS members",
+    "body": [
+      "//COPY     EXEC PGM=IEBCOPY",
+      "//SYSPRINT DD SYSOUT=*",
+      "//IN       DD DISP=SHR,DSN=${1:FROM.PDS}",
+      "//OUT      DD DISP=SHR,DSN=${2:TO.PDS}",
+      "//SYSIN    DD *",
+      "  COPY OUTDD=OUT,INDD=IN",
+      "  SELECT MEMBER=(${3:MEMBER1})",
+      "/*$0"
+    ]
+  },
+  "IEBGENER copy sequential": {
+    "prefix": [
+      "iebgener"
+    ],
+    "description": "Copy a sequential data set",
+    "body": [
+      "//COPY     EXEC PGM=IEBGENER",
+      "//SYSPRINT DD SYSOUT=*",
+      "//SYSUT1   DD DISP=SHR,DSN=${1:INPUT.DATA}",
+      "//SYSUT2   DD SYSOUT=*",
+      "//SYSIN    DD DUMMY$0"
+    ]
+  },
+  "SORT": {
+    "prefix": [
+      "sort",
+      "dfsort"
+    ],
+    "description": "DFSORT step",
+    "body": [
+      "//SORT     EXEC PGM=SORT",
+      "//SYSOUT   DD SYSOUT=*",
+      "//SORTIN   DD DISP=SHR,DSN=${1:INPUT.DATA}",
+      "//SORTOUT  DD SYSOUT=*",
+      "//SYSIN    DD *",
+      "  SORT FIELDS=(${2:1},${3:10},${4|CH,ZD,PD,BI|},${5|A,D|})",
+      "/*$0"
+    ]
+  },
+  "IDCAMS": {
+    "prefix": [
+      "idcams"
+    ],
+    "description": "IDCAMS step",
+    "body": [
+      "//IDCAMS   EXEC PGM=IDCAMS",
+      "//SYSPRINT DD SYSOUT=*",
+      "//SYSIN    DD *",
+      "  ${1:LISTCAT LEVEL(&SYSUID) ALL}",
+      "/*$0"
+    ]
+  },
+  "IDCAMS define KSDS": {
+    "prefix": [
+      "ksds",
+      "defcl"
+    ],
+    "description": "Define a VSAM KSDS",
+    "body": [
+      "//DEFINE   EXEC PGM=IDCAMS",
+      "//SYSPRINT DD SYSOUT=*",
+      "//SYSIN    DD *",
+      "  DEFINE CLUSTER (NAME(${1:HLQ.MY.KSDS}) -",
+      "         INDEXED KEYS(${2:8} 0) RECORDSIZE(${3:80} ${4:80}) -",
+      "         CYLINDERS(${5:1} ${6:1}))",
+      "/*$0"
+    ]
+  },
+  "IKJEFT01 TSO batch": {
+    "prefix": [
+      "ikjeft01",
+      "tsobatch"
+    ],
+    "description": "Run TSO commands in batch",
+    "body": [
+      "//TSO      EXEC PGM=IKJEFT01",
+      "//SYSTSPRT DD SYSOUT=*",
+      "//SYSTSIN  DD *",
+      "  ${1:LISTDS '&SYSUID..LOAD' MEMBERS}",
+      "/*$0"
+    ]
+  },
+  "COND / IF": {
+    "prefix": [
+      "if"
+    ],
+    "description": "IF/THEN/ENDIF",
+    "body": [
+      "// IF (${1:STEP1}.RC ${2|<=,=,>,<|} ${3:4}) THEN",
+      "$0",
+      "// ENDIF"
+    ]
+  },
+  "Comment box": {
+    "prefix": [
+      "comment"
+    ],
+    "description": "Comment block",
+    "body": [
+      "//*--------------------------------------------------------------*",
+      "//* ${1:Description}",
+      "//*--------------------------------------------------------------*"
+    ]
+  }
+}

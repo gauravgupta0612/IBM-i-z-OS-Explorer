@@ -39,7 +39,8 @@ export class Sessions {
     if (!c) {
       const p = this.profile(id);
       c = new IbmiClient(p, () => this.store.password(p), () => ({
-        tempDir: this.cfg().get('ibmi.tempDir', '/tmp'), ccsid: this.cfg().get('ibmi.sourceCcsid', 1208)
+        tempDir: this.cfg().get('ibmi.tempDir', '/tmp'), ccsid: this.cfg().get('ibmi.sourceCcsid', 1208),
+        libraryList: this.store.get(id)?.libraryList ?? [], currentLibrary: this.store.get(id)?.currentLibrary
       }));
       this.ibmi.set(id, c);
     }

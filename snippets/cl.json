@@ -1,0 +1,89 @@
+{
+  "CL program": {
+    "prefix": [
+      "pgm",
+      "program"
+    ],
+    "description": "CL program skeleton",
+    "body": [
+      "PGM        PARM(${1:&PARM1})",
+      "  DCL        VAR(${1:&PARM1}) TYPE(*CHAR) LEN(${2:10})",
+      "  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))",
+      "",
+      "  $0",
+      "",
+      "  RETURN",
+      "ERROR:",
+      "  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error in program') MSGTYPE(*ESCAPE)",
+      "ENDPGM"
+    ]
+  },
+  "DCL variable": {
+    "prefix": [
+      "dcl"
+    ],
+    "description": "Declare a variable",
+    "body": [
+      "DCL        VAR(&${1:NAME}) TYPE(${2|*CHAR,*DEC,*INT,*LGL|}) LEN(${3:10})$0"
+    ]
+  },
+  "IF / DO": {
+    "prefix": [
+      "if"
+    ],
+    "description": "IF THEN DO",
+    "body": [
+      "IF         COND(${1:&A *EQ &B}) THEN(DO)",
+      "  $0",
+      "ENDDO"
+    ]
+  },
+  "DOWHILE": {
+    "prefix": [
+      "dowhile"
+    ],
+    "description": "DOWHILE loop",
+    "body": [
+      "DOWHILE    COND(${1:&I *LE 10})",
+      "  $0",
+      "ENDDO"
+    ]
+  },
+  "MONMSG": {
+    "prefix": [
+      "monmsg"
+    ],
+    "description": "Monitor message",
+    "body": [
+      "MONMSG     MSGID(${1:CPF0000}) EXEC(${2:DO})$0"
+    ]
+  },
+  "SNDPGMMSG": {
+    "prefix": [
+      "sndpgmmsg"
+    ],
+    "description": "Send program message",
+    "body": [
+      "SNDPGMMSG  MSG('${1:text}') TOPGMQ(*PRV) MSGTYPE(${2|*INFO,*COMP,*DIAG,*ESCAPE|})$0"
+    ]
+  },
+  "OVRDBF": {
+    "prefix": [
+      "ovrdbf"
+    ],
+    "description": "Override database file",
+    "body": [
+      "OVRDBF     FILE(${1:FILE}) TOFILE(${2:LIB/FILE}) OVRSCOPE(*JOB)$0",
+      "DLTOVR     FILE(${1:FILE}) LVL(*JOB)"
+    ]
+  },
+  "SBMJOB": {
+    "prefix": [
+      "sbmjob"
+    ],
+    "description": "Submit a job",
+    "body": [
+      "SBMJOB     CMD(CALL PGM(${1:LIB/PGM})) JOB(${2:JOBNAME}) JOBQ(${3:QBATCH})$0"
+    ]
+  }
+}

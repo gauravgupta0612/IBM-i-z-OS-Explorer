@@ -4,6 +4,8 @@ export type ProfileType = 'zos' | 'ibmi';
 
 export interface JobFilter { owner: string; prefix: string; }
 
+export interface Favorite { label: string; description?: string; uri: string; }
+
 export interface Profile {
   id: string;
   type: ProfileType;
@@ -27,6 +29,12 @@ export interface Profile {
   privateKeyPath?: string;
   /** IBM i: library where compiled objects go (default = source library) */
   objectLibrary?: string;
+  /** IBM i: libraries added (in this order) to the library list of CL commands and compiles */
+  libraryList?: string[];
+  /** IBM i: current library for CL commands and compiles */
+  currentLibrary?: string;
+  /** Favorite members / files, opened with one click */
+  favorites?: Favorite[];
 }
 
 const KEY = 'mf.profiles';

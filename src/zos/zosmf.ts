@@ -180,6 +180,34 @@ export class ZosmfClient {
     await this.request('DELETE', `/zosmf/restjobs/jobs/${jobname}/${jobid}`);
   }
 
+  /** Original JCL of a job (as submitted). */
+  async jobJcl(jobname: string, jobid: string): Promise<string> {
+    return (await this.request('GET', `/zosmf/restjobs/jobs/${jobname}/${jobid}/files/JCL/records`)).body.toString('utf8');
+  }
+
+  // ---------- copy / rename / attributes ----------
+  /** Copy a member (or all members with member '*') into another partitioned data set. */
+  async copyMember(fromDs: string, fromMember: string, toDs: string, toMember: string, replace: boolean): Promise<void> {
+    await this.request('PUT', this.dsPath(toDs, toMember === '*' ? undefined : toMember),
+      { request: 'copy', 'from-dataset': { dsn: fromDs, member: fromMember }, replace });
+  }
+  /** Copy a sequential data set into another (existing) data set or member. */
+  async copySequential(fromDs: string, toDs: string, toMember?: string): Promise<void> {
+    await this.request('PUT', this.dsPath(toDs, toMember), { request: 'copy', 'from-dataset': { dsn: fromDs } });
+  }
+  async renameMember(ds: string, oldMember: string, newMember: string): Promise<void> {
+    await this.request('PUT', this.dsPath(ds, newMember), { request: 'rename', 'from-dataset': { dsn: ds, member: oldMember } });
+  }
+  async renameDataset(oldDs: string, newDs: string): Promise<void> {
+    await this.request('PUT', this.dsPath(newDs), { request: 'rename', 'from-dataset': { dsn: oldDs } });
+  }
+  /** All attributes z/OSMF returns for one data set. */
+  async datasetAttributes(ds: string): Promise<Record<string, unknown>> {
+    const r = await this.request('GET', `/zosmf/restfiles/ds?dslevel=${encodeURIComponent(ds)}`, undefined, { 'X-IBM-Attributes': 'base,total' });
+    const items: any[] = this.json(r).items ?? [];
+    return items.find(i => i.dsname === ds) ?? items[0] ?? {};
+  }
+
   // ---------- console ----------
   async console(cmd: string): Promise<string> {
     const r = this.json(await this.request('PUT', '/zosmf/restconsoles/consoles/defcn', { cmd }));

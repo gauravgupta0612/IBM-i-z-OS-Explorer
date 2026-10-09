@@ -57,6 +57,24 @@ abstract class BaseTree implements vscode.TreeDataProvider<Node> {
     }
   }
   protected abstract profileChildren(p: Profile): Promise<Node[]>;
+
+  /** "Favorites" node, only when the connection has favorites. */
+  protected favoritesNode(p: Profile): Node[] {
+    const favs = this.store.get(p.id)?.favorites ?? [];
+    if (!favs.length) { return []; }
+    const n = new Node('Favorites', `${this.type}-favRoot`, p.id, true, {}, async () =>
+      (this.store.get(p.id)?.favorites ?? []).map(f => {
+        const uri = vscode.Uri.parse(f.uri);
+        const fn = new Node(f.label, 'favorite', p.id, false, { favorite: f });
+        fn.description = f.description;
+        fn.resourceUri = uri;
+        fn.command = open(uri);
+        fn.iconPath = new vscode.ThemeIcon('star-full');
+        return fn;
+      }));
+    n.icon = 'star-full';
+    return [n];
+  }
 }
 
 // ===================================================================== z/OS
@@ -70,7 +88,7 @@ export class ZosTree extends BaseTree {
     uss.icon = 'folder-library';
     const jobs = new Node('Jobs', 'zos-jobRoot', p.id, true, {}, async () => (this.store.get(p.id)?.jobFilters ?? []).map(f => this.jobFilterNode(p.id, f.owner, f.prefix)));
     jobs.icon = 'checklist';
-    return [ds, uss, jobs];
+    return [...this.favoritesNode(p), ds, uss, jobs];
   }
 
   private dsFilterNode(pid: string, filter: string): Node {
@@ -93,7 +111,7 @@ export class ZosTree extends BaseTree {
         } : undefined);
         node.icon = migrated ? 'cloud' : isPO ? 'library' : 'file';
         node.description = [d.dsorg, d.recfm, d.lrecl, d.vol].filter(Boolean).join(' ');
-        if (!isPO && d.dsorg && !migrated) { node.command = open(uris.zosSeq(pid, d.dsname)); }
+        if (!isPO && d.dsorg && !migrated) { node.command = open(uris.zosSeq(pid, d.dsname)); node.resourceUri = uris.zosSeq(pid, d.dsname); }
         if (migrated) { node.tooltip = 'Migrated – open to recall'; node.command = { command: 'mf.zos.recall', title: 'Recall', arguments: [node] }; }
         return node;
       });
@@ -177,7 +195,42 @@ export class IbmiTree extends BaseTree {
       });
     });
     jobs.icon = 'pulse';
-    return [libs, ifs, spool, jobs];
+    const libl = new Node('Library List', 'ibmi-liblRoot', p.id, true, {}, async () => {
+      const cur = this.store.get(p.id);
+      const items: Node[] = [];
+      if (cur?.currentLibrary) {
+        const c = new Node(cur.currentLibrary, 'ibmi-curlib', p.id, false, { lib: cur.currentLibrary });
+        c.description = 'current library'; c.icon = 'home';
+        items.push(c);
+      }
+      (cur?.libraryList ?? []).forEach((l, i) => {
+        const e = new Node(l, 'ibmi-liblEntry', p.id, false, { lib: l, index: i });
+        e.description = `#${i + 1}`; e.icon = 'library';
+        items.push(e);
+      });
+      return items;
+    });
+    libl.icon = 'list-ordered';
+    libl.tooltip = 'Libraries added to the library list of CL commands and compiles';
+    const msgq = new Node('Message Queues', 'ibmi-msgqRoot', p.id, true, {}, async () =>
+      [['QSYS', 'QSYSOPR', 'QSYSOPR (system operator)'], ['QUSRSYS', p.user.toUpperCase(), `${p.user.toUpperCase()} (your messages)`]].map(([lib, q, label]) => {
+        const qn = new Node(label, 'ibmi-msgq', p.id, true, { lib, queue: q }, async () => {
+          const msgs = await this.sessions.ibmiClient(p.id).listMessages(lib, q);
+          return msgs.map(m => {
+            const waiting = m.type === 'INQUIRY' && !m.answered;
+            const mn = new Node(m.text, waiting ? 'ibmi-msg-inq' : 'ibmi-msg', p.id, false, { lib, queue: q, msg: m });
+            mn.description = `${m.id} ${m.time.slice(0, 19)}${m.type === 'INQUIRY' ? (m.answered ? ' · answered' : ' · waiting for reply') : ''}`;
+            mn.tooltip = `${m.id}  ${m.type}  severity ${m.severity}\n${m.time}\nFrom: ${m.fromUser} ${m.fromJob}\n\n${m.text}`;
+            mn.iconPath = new vscode.ThemeIcon(waiting ? 'question' : m.type === 'INQUIRY' ? 'pass' : m.severity >= 40 ? 'error' : m.severity >= 20 ? 'warning' : 'info');
+            mn.command = { command: 'mf.ibmi.showMessage', title: 'Show', arguments: [mn] };
+            return mn;
+          });
+        });
+        qn.icon = 'mail';
+        return qn;
+      }));
+    msgq.icon = 'inbox';
+    return [...this.favoritesNode(p), libs, libl, ifs, spool, jobs, msgq];
   }
 
   private libNode(pid: string, lib: string): Node {
@@ -203,7 +256,7 @@ export class IbmiTree extends BaseTree {
       });
       for (const o of objects) {
         if (o.type === '*FILE' && src.has(o.name)) { continue; }
-        const on = new Node(o.name, 'ibmi-object', pid, false, { lib, obj: o });
+        const on = new Node(o.name, `ibmi-object-${o.type.replace(/^\*/, '')}`, pid, false, { lib, obj: o });
         on.description = `${o.type} ${o.attribute} ${o.text}`.replace(/\s+/g, ' ').trim();
         on.icon = o.type === '*PGM' ? 'symbol-method' : o.type === '*SRVPGM' ? 'symbol-module' : o.type === '*FILE' ? 'table'
           : o.type === '*MODULE' ? 'symbol-class' : o.type === '*DTAARA' ? 'symbol-variable' : 'symbol-misc';

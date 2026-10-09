@@ -1,0 +1,107 @@
+{
+  "Program skeleton": {
+    "prefix": [
+      "program",
+      "cobol"
+    ],
+    "description": "COBOL program skeleton",
+    "body": [
+      "       IDENTIFICATION DIVISION.",
+      "       PROGRAM-ID. ${1:PROGNAME}.",
+      "       ENVIRONMENT DIVISION.",
+      "       DATA DIVISION.",
+      "       WORKING-STORAGE SECTION.",
+      "       01  WS-${2:FIELD}            PIC X(${3:10}).",
+      "       PROCEDURE DIVISION.",
+      "       MAIN-PARA.",
+      "           ${0:DISPLAY 'HELLO'}",
+      "           GOBACK."
+    ]
+  },
+  "PERFORM UNTIL": {
+    "prefix": [
+      "perform"
+    ],
+    "description": "Inline PERFORM UNTIL",
+    "body": [
+      "           PERFORM UNTIL ${1:WS-EOF = 'Y'}",
+      "               $0",
+      "           END-PERFORM"
+    ]
+  },
+  "PERFORM VARYING": {
+    "prefix": [
+      "varying"
+    ],
+    "description": "PERFORM VARYING loop",
+    "body": [
+      "           PERFORM VARYING ${1:WS-I} FROM 1 BY 1 UNTIL ${1:WS-I} > ${2:10}",
+      "               $0",
+      "           END-PERFORM"
+    ]
+  },
+  "EVALUATE": {
+    "prefix": [
+      "evaluate"
+    ],
+    "description": "EVALUATE block",
+    "body": [
+      "           EVALUATE ${1:WS-CODE}",
+      "               WHEN ${2:'A'}",
+      "                   $0",
+      "               WHEN OTHER",
+      "                   CONTINUE",
+      "           END-EVALUATE"
+    ]
+  },
+  "IF ELSE": {
+    "prefix": [
+      "if"
+    ],
+    "description": "IF/ELSE",
+    "body": [
+      "           IF ${1:condition}",
+      "               $0",
+      "           ELSE",
+      "               CONTINUE",
+      "           END-IF"
+    ]
+  },
+  "File READ loop": {
+    "prefix": [
+      "readloop"
+    ],
+    "description": "Sequential read loop",
+    "body": [
+      "           OPEN INPUT ${1:IN-FILE}",
+      "           PERFORM UNTIL ${2:WS-EOF} = 'Y'",
+      "               READ ${1:IN-FILE}",
+      "                   AT END MOVE 'Y' TO ${2:WS-EOF}",
+      "                   NOT AT END $0",
+      "               END-READ",
+      "           END-PERFORM",
+      "           CLOSE ${1:IN-FILE}"
+    ]
+  },
+  "EXEC SQL": {
+    "prefix": [
+      "execsql",
+      "sql"
+    ],
+    "description": "Embedded SQL",
+    "body": [
+      "           EXEC SQL",
+      "               ${1:SELECT COL INTO :WS-COL FROM TABLE WHERE KEY = :WS-KEY}",
+      "           END-EXEC"
+    ]
+  },
+  "CALL": {
+    "prefix": [
+      "call"
+    ],
+    "description": "CALL a program",
+    "body": [
+      "           CALL '${1:PROGRAM}' USING ${2:WS-PARM}$0"
+    ]
+  }
+}

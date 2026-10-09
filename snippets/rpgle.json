@@ -1,0 +1,139 @@
+{
+  "**FREE program": {
+    "prefix": [
+      "free",
+      "program"
+    ],
+    "description": "Fully free RPGLE program",
+    "body": [
+      "**FREE",
+      "ctl-opt dftactgrp(*no) actgrp(*new) option(*srcstmt: *nodebugio);",
+      "",
+      "dcl-s ${1:message} varchar(50) inz('Hello');",
+      "",
+      "dsply ${1:message};",
+      "$0",
+      "*inlr = *on;",
+      "return;"
+    ]
+  },
+  "dcl-proc": {
+    "prefix": [
+      "proc",
+      "dcl-proc"
+    ],
+    "description": "Procedure",
+    "body": [
+      "dcl-proc ${1:myProc} ${2:export};",
+      "  dcl-pi *n ${3:int(10)};",
+      "    ${4:parm} ${5:varchar(50)} const;",
+      "  end-pi;",
+      "",
+      "  $0",
+      "  return ${6:0};",
+      "end-proc;"
+    ]
+  },
+  "dcl-pr external program": {
+    "prefix": [
+      "dcl-pr",
+      "extpgm"
+    ],
+    "description": "Prototype for an external program",
+    "body": [
+      "dcl-pr ${1:callProgram} extpgm('${2:PGMNAME}');",
+      "  ${3:parm1} char(${4:10});",
+      "end-pr;$0"
+    ]
+  },
+  "dcl-ds qualified": {
+    "prefix": [
+      "dcl-ds",
+      "ds"
+    ],
+    "description": "Qualified data structure",
+    "body": [
+      "dcl-ds ${1:customer} qualified;",
+      "  ${2:id} packed(7: 0);",
+      "  ${3:name} varchar(50);",
+      "end-ds;$0"
+    ]
+  },
+  "for loop": {
+    "prefix": [
+      "for"
+    ],
+    "description": "FOR loop",
+    "body": [
+      "for ${1:i} = 1 to ${2:10};",
+      "  $0",
+      "endfor;"
+    ]
+  },
+  "dow loop": {
+    "prefix": [
+      "dow"
+    ],
+    "description": "DOW loop",
+    "body": [
+      "dow ${1:not %eof(file)};",
+      "  $0",
+      "enddo;"
+    ]
+  },
+  "select / when": {
+    "prefix": [
+      "select"
+    ],
+    "description": "SELECT block",
+    "body": [
+      "select;",
+      "  when ${1:condition};",
+      "    $0",
+      "  other;",
+      "endsl;"
+    ]
+  },
+  "monitor": {
+    "prefix": [
+      "monitor"
+    ],
+    "description": "MONITOR / ON-ERROR",
+    "body": [
+      "monitor;",
+      "  $0",
+      "on-error;",
+      "  ${1:// handle error}",
+      "endmon;"
+    ]
+  },
+  "embedded SQL select": {
+    "prefix": [
+      "execsql",
+      "sql"
+    ],
+    "description": "Embedded SQL SELECT INTO",
+    "body": [
+      "exec sql select ${1:col} into :${2:hostVar} from ${3:library.table} where ${4:key} = :${5:keyVar};",
+      "if sqlcode <> 0;",
+      "  $0",
+      "endif;"
+    ]
+  },
+  "SQL cursor": {
+    "prefix": [
+      "cursor"
+    ],
+    "description": "Embedded SQL cursor loop",
+    "body": [
+      "exec sql declare ${1:c1} cursor for select ${2:*} from ${3:library.table};",
+      "exec sql open ${1:c1};",
+      "exec sql fetch next from ${1:c1} into :${4:row};",
+      "dow sqlcode = 0;",
+      "  $0",
+      "  exec sql fetch next from ${1:c1} into :${4:row};",
+      "enddo;",
+      "exec sql close ${1:c1};"
+    ]
+  }
+}

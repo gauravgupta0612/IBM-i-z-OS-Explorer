@@ -38,7 +38,7 @@ jobs:
         run: |
           VER="${GITHUB_REF_NAME#v}"
           awk -v v="$VER" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {if (f) exit} f' CHANGELOG.md > release-notes.md
-          printf '\n---\n**Install:** download the `.vsix` below → VS Code → Extensions → `…` → *Install from VSIX…*\n' >> release-notes.md
+          printf '\n---\n**Install:** download the `.vsix` below → VS Code → Extensions → `…` → *Install from VSIX…*\n\n📖 Documentation: https://gauravgupta0612.github.io/IBM-i-z-OS-Explorer-doc/ · Full changelog: https://gauravgupta0612.github.io/IBM-i-z-OS-Explorer-doc/changelog/\n' >> release-notes.md
           cat release-notes.md
 
       - name: Create GitHub Release
