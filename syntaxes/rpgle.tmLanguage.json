@@ -1,0 +1,51 @@
+{
+ "scopeName": "source.rpgle",
+ "name": "RPGLE",
+ "patterns": [
+  {
+   "match": "//.*$",
+   "name": "comment.line.rpgle"
+  },
+  {
+   "match": "^.{5}\\*.*$",
+   "name": "comment.line.fixed.rpgle"
+  },
+  {
+   "match": "^\\s*\\*\\*(?i:free|ctdata|ftrans).*$",
+   "name": "keyword.other.directive.rpgle"
+  },
+  {
+   "match": "^\\s*/(?i:copy|include|if|elseif|else|endif|define|undefine|eof|free|end-free|title|eject|space|set|restore)\\b.*$",
+   "name": "keyword.other.directive.rpgle"
+  },
+  {
+   "begin": "'",
+   "end": "'",
+   "name": "string.quoted.single.rpgle"
+  },
+  {
+   "match": "(?i)\\b(dcl-(s|c|ds|f|pr|pi|proc|subf|parm|enum)|end-(ds|pr|pi|proc|enum)|ctl-opt)\\b",
+   "name": "storage.type.rpgle"
+  },
+  {
+   "match": "(?i)\\b(if|else|elseif|endif|dow|dou|enddo|for|endfor|select|when|other|endsl|monitor|on-error|endmon|iter|leave|leavesr|return|begsr|endsr|exsr|callp|eval|eval-corr|clear|reset|read|reade|readp|readpe|chain|setll|setgt|write|update|delete|open|close|exfmt|dsply|commit|rolbk|sorta|in|out|unlock|feod|exec\\s+sql|sql)\\b",
+   "name": "keyword.control.rpgle"
+  },
+  {
+   "match": "(?i)\\b(char|varchar|int|uns|packed|zoned|ind|date|time|timestamp|pointer|like|likeds|likerec|const|value|dim|inz|qualified|template|export|import|extpgm|extproc|options|nopass|omit|varying|based|overlay|pos|ccsid|graph|ucs2|float|bindec|object)\\b",
+   "name": "support.type.rpgle"
+  },
+  {
+   "match": "%[A-Za-z]+",
+   "name": "support.function.builtin.rpgle"
+  },
+  {
+   "match": "\\*(?i:on|off|blank|blanks|zero|zeros|hival|loval|null|omit|inlr|in\\d\\d|start|end|all|entry|nopass|varsize|string|iso|usa|eur|jis|ymd|mdy|dmy|cymd|cdmy|cmdy|job|sys|nokey|lock)\\b",
+   "name": "constant.language.rpgle"
+  },
+  {
+   "match": "\\b\\d+(\\.\\d+)?\\b",
+   "name": "constant.numeric.rpgle"
+  }
+ ]
+}

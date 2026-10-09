@@ -1,0 +1,48 @@
+{
+ "scopeName": "source.cobol",
+ "name": "COBOL",
+ "patterns": [
+  {
+   "match": "^.{6}\\*.*$",
+   "name": "comment.line.cobol"
+  },
+  {
+   "match": "\\*>.*$",
+   "name": "comment.line.cobol"
+  },
+  {
+   "begin": "'",
+   "end": "'",
+   "name": "string.quoted.single.cobol"
+  },
+  {
+   "begin": "\"",
+   "end": "\"",
+   "name": "string.quoted.double.cobol"
+  },
+  {
+   "match": "(?i)\\b(IDENTIFICATION|ENVIRONMENT|DATA|PROCEDURE)\\s+DIVISION\\b",
+   "name": "keyword.control.division.cobol"
+  },
+  {
+   "match": "(?i)\\b(WORKING-STORAGE|LINKAGE|FILE|LOCAL-STORAGE|INPUT-OUTPUT|CONFIGURATION)\\s+SECTION\\b",
+   "name": "keyword.control.section.cobol"
+  },
+  {
+   "match": "(?i)\\b(PERFORM|UNTIL|VARYING|END-PERFORM|IF|ELSE|END-IF|EVALUATE|WHEN|END-EVALUATE|MOVE|TO|COMPUTE|ADD|SUBTRACT|MULTIPLY|DIVIDE|GIVING|CALL|USING|GOBACK|STOP\\s+RUN|EXIT|DISPLAY|ACCEPT|OPEN|CLOSE|READ|WRITE|REWRITE|DELETE|START|AT\\s+END|NOT|INITIALIZE|STRING|UNSTRING|INSPECT|SET|SEARCH|COPY|REPLACING|EXEC|END-EXEC|CONTINUE|GO\\s+TO|PROGRAM-ID|SECTION|FD|SELECT|ASSIGN)\\b",
+   "name": "keyword.control.cobol"
+  },
+  {
+   "match": "(?i)\\b(PIC|PICTURE|VALUE|VALUES|OCCURS|TIMES|REDEFINES|COMP(-[1-5])?|COMPUTATIONAL|PACKED-DECIMAL|BINARY|INDEXED|BY|DEPENDING|ON|SPACES?|ZEROS?|ZEROES|HIGH-VALUES?|LOW-VALUES?|FILLER)\\b",
+   "name": "storage.type.cobol"
+  },
+  {
+   "match": "^\\s*(0[1-9]|[1-4][0-9]|66|77|88)\\b",
+   "name": "constant.numeric.level.cobol"
+  },
+  {
+   "match": "\\b\\d+(\\.\\d+)?\\b",
+   "name": "constant.numeric.cobol"
+  }
+ ]
+}

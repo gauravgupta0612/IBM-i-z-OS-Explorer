@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+*.vsix
+
+# Editor / OS
+.vscode-test/
+*.code-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local helper files (not part of the project)
+/vscode/
+/push-to-github.bat
+/commit-message.txt
+/github-workflow-release.yml
+/LICENSE.txt
+
+# Logs
+npm-debug.log*
+*.log
+
+# Secrets - never commit passwords or keys
+.env
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+/fix-github.bat
+/publish.bat

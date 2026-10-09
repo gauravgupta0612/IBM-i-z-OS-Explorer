@@ -1,0 +1,49 @@
+{
+ "scopeName": "source.jcl",
+ "name": "JCL",
+ "patterns": [
+  {
+   "match": "^//\\*.*$",
+   "name": "comment.line.jcl"
+  },
+  {
+   "match": "^/\\*.*$",
+   "name": "keyword.control.jcl"
+  },
+  {
+   "match": "^(//)([A-Z#$@][A-Z0-9#$@.]{0,16})?\\s+(JOB|EXEC|DD|PROC|PEND|SET|IF|THEN|ELSE|ENDIF|INCLUDE|JCLLIB|OUTPUT|CNTL|ENDCNTL|EXPORT|XMIT)\\b",
+   "captures": {
+    "1": {
+     "name": "punctuation.definition.jcl"
+    },
+    "2": {
+     "name": "entity.name.function.jcl"
+    },
+    "3": {
+     "name": "keyword.control.jcl"
+    }
+   }
+  },
+  {
+   "match": "\\b(PGM|PROC|DSN|DSNAME|DISP|SPACE|UNIT|VOL|DCB|RECFM|LRECL|BLKSIZE|SYSOUT|CLASS|MSGCLASS|MSGLEVEL|NOTIFY|REGION|TIME|COND|PARM|TYPRUN|LIKE|DSORG|DSNTYPE|STORCLAS|MGMTCLAS|DATACLAS|PATH|PATHOPTS|PATHMODE|RESTART|ORDER|MEMLIMIT)(?==)",
+   "name": "variable.parameter.jcl"
+  },
+  {
+   "match": "\\b(NEW|OLD|SHR|MOD|CATLG|DELETE|KEEP|PASS|UNCATLG|TRK|CYL|RLSE|SYSDA|DUMMY)\\b",
+   "name": "constant.language.jcl"
+  },
+  {
+   "match": "&[A-Z#$@][A-Z0-9#$@]*\\.?",
+   "name": "variable.other.jcl"
+  },
+  {
+   "begin": "'",
+   "end": "'",
+   "name": "string.quoted.single.jcl"
+  },
+  {
+   "match": "\\b\\d+\\b",
+   "name": "constant.numeric.jcl"
+  }
+ ]
+}

@@ -1,0 +1,831 @@
+{
+  "name": "ibmi-zos-explorer",
+  "displayName": "IBM i & z/OS Explorer",
+  "description": "Connect to IBM i (SSH + SQL) and z/OS (z/OSMF REST). Browse libraries, source members, IFS, data sets, USS and jobs; edit and save remote source; submit JCL; run CL, SQL, TSO and console commands; compile members.",
+  "version": "1.0.0",
+  "publisher": "gauravgupta0612",
+  "author": {
+    "name": "Gaurav Gupta",
+    "url": "https://github.com/gauravgupta0612"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "IBM i",
+    "AS400",
+    "z/OS",
+    "mainframe",
+    "zowe",
+    "RPG",
+    "COBOL",
+    "JCL",
+    "CL"
+  ],
+  "icon": "media/icon.png",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onFileSystem:mf",
+    "onStartupFinished"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gauravgupta0612/IBM-i-z-OS-Explorer.git"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "mainframeExplorer",
+          "title": "IBM i & z/OS",
+          "icon": "media/mainframe.svg"
+        }
+      ]
+    },
+    "views": {
+      "mainframeExplorer": [
+        {
+          "id": "mf.zosView",
+          "name": "z/OS"
+        },
+        {
+          "id": "mf.ibmiView",
+          "name": "IBM i"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "mf.zosView",
+        "contents": "No z/OS connection yet.\n[Add z/OS Connection](command:mf.addZosProfile)"
+      },
+      {
+        "view": "mf.ibmiView",
+        "contents": "No IBM i connection yet.\n[Add IBM i Connection](command:mf.addIbmiProfile)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "mf.addZosProfile",
+        "title": "Add z/OS Connection",
+        "category": "Mainframe",
+        "icon": "$(add)"
+      },
+      {
+        "command": "mf.addIbmiProfile",
+        "title": "Add IBM i Connection",
+        "category": "Mainframe",
+        "icon": "$(add)"
+      },
+      {
+        "command": "mf.editProfile",
+        "title": "Edit Connection",
+        "category": "Mainframe",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "mf.removeProfile",
+        "title": "Remove Connection",
+        "category": "Mainframe",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mf.resetPassword",
+        "title": "Reset Stored Password",
+        "category": "Mainframe"
+      },
+      {
+        "command": "mf.testConnection",
+        "title": "Test Connection",
+        "category": "Mainframe",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "mf.disconnect",
+        "title": "Disconnect",
+        "category": "Mainframe",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "mf.refresh",
+        "title": "Refresh",
+        "category": "Mainframe",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "mf.refreshAll",
+        "title": "Refresh All",
+        "category": "Mainframe",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "mf.removeFilter",
+        "title": "Remove Filter",
+        "category": "Mainframe",
+        "icon": "$(close)"
+      },
+      {
+        "command": "mf.zos.addDsFilter",
+        "title": "Add Data Set Filter",
+        "category": "z/OS",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "mf.zos.addUssPath",
+        "title": "Add USS Path",
+        "category": "z/OS",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "mf.zos.addJobFilter",
+        "title": "Add Job Filter",
+        "category": "z/OS",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "mf.zos.createDataset",
+        "title": "Create Data Set",
+        "category": "z/OS",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mf.zos.createMember",
+        "title": "Create Member",
+        "category": "z/OS",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "mf.zos.createUssFile",
+        "title": "Create USS File",
+        "category": "z/OS",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "mf.zos.createUssDir",
+        "title": "Create USS Directory",
+        "category": "z/OS",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mf.zos.delete",
+        "title": "Delete",
+        "category": "z/OS",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mf.zos.submitJcl",
+        "title": "Submit JCL",
+        "category": "z/OS",
+        "icon": "$(run)"
+      },
+      {
+        "command": "mf.zos.submitMember",
+        "title": "Submit as Job",
+        "category": "z/OS",
+        "icon": "$(run)"
+      },
+      {
+        "command": "mf.zos.cancelJob",
+        "title": "Cancel Job",
+        "category": "z/OS",
+        "icon": "$(stop-circle)"
+      },
+      {
+        "command": "mf.zos.purgeJob",
+        "title": "Purge Job",
+        "category": "z/OS",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mf.zos.downloadAllSpool",
+        "title": "Open All Spool Output",
+        "category": "z/OS",
+        "icon": "$(output)"
+      },
+      {
+        "command": "mf.zos.tso",
+        "title": "Issue TSO Command",
+        "category": "z/OS",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "mf.zos.console",
+        "title": "Issue MVS Console Command",
+        "category": "z/OS",
+        "icon": "$(terminal-cmd)"
+      },
+      {
+        "command": "mf.zos.uploadFile",
+        "title": "Upload Local File to Member / USS",
+        "category": "z/OS",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "mf.ibmi.addLibrary",
+        "title": "Add Library Filter",
+        "category": "IBM i",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "mf.ibmi.addIfsPath",
+        "title": "Add IFS Path",
+        "category": "IBM i",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "mf.ibmi.runCl",
+        "title": "Run CL Command",
+        "category": "IBM i",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "mf.ibmi.runSql",
+        "title": "Run SQL",
+        "category": "IBM i",
+        "icon": "$(database)"
+      },
+      {
+        "command": "mf.ibmi.runSqlEditor",
+        "title": "Run SQL Statement (Editor)",
+        "category": "IBM i",
+        "icon": "$(play)"
+      },
+      {
+        "command": "mf.ibmi.compile",
+        "title": "Compile",
+        "category": "IBM i",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "mf.ibmi.compileEditor",
+        "title": "Compile Current Member",
+        "category": "IBM i",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "mf.ibmi.createSrcFile",
+        "title": "Create Source File",
+        "category": "IBM i",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mf.ibmi.createMember",
+        "title": "Create Member",
+        "category": "IBM i",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "mf.ibmi.deleteMember",
+        "title": "Delete Member",
+        "category": "IBM i",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mf.ibmi.createIfsFile",
+        "title": "Create IFS File",
+        "category": "IBM i",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "mf.ibmi.createIfsDir",
+        "title": "Create IFS Directory",
+        "category": "IBM i",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mf.ibmi.deleteIfs",
+        "title": "Delete IFS Entry",
+        "category": "IBM i",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mf.ibmi.deleteSpool",
+        "title": "Delete Spooled File",
+        "category": "IBM i",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mf.ibmi.endJob",
+        "title": "End Job",
+        "category": "IBM i",
+        "icon": "$(stop-circle)"
+      },
+      {
+        "command": "mf.ibmi.showJobLog",
+        "title": "Show Job Log",
+        "category": "IBM i",
+        "icon": "$(output)"
+      },
+      {
+        "command": "mf.ibmi.terminal",
+        "title": "Open PASE Shell (SSH Terminal)",
+        "category": "IBM i",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "mf.zos.recall",
+        "title": "Recall Migrated Data Set",
+        "category": "z/OS",
+        "icon": "$(cloud-download)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "mf.addZosProfile",
+          "when": "view == mf.zosView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mf.refreshAll",
+          "when": "view == mf.zosView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "mf.addIbmiProfile",
+          "when": "view == mf.ibmiView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mf.refreshAll",
+          "when": "view == mf.ibmiView",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "mf.testConnection",
+          "when": "viewItem =~ /^profile/",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.editProfile",
+          "when": "viewItem =~ /^profile/",
+          "group": "1_profile@1"
+        },
+        {
+          "command": "mf.resetPassword",
+          "when": "viewItem =~ /^profile/",
+          "group": "1_profile@2"
+        },
+        {
+          "command": "mf.disconnect",
+          "when": "viewItem == profile-ibmi",
+          "group": "1_profile@3"
+        },
+        {
+          "command": "mf.removeProfile",
+          "when": "viewItem =~ /^profile/",
+          "group": "9_remove@1"
+        },
+        {
+          "command": "mf.zos.tso",
+          "when": "viewItem == profile-zos",
+          "group": "2_cmd@1"
+        },
+        {
+          "command": "mf.zos.console",
+          "when": "viewItem == profile-zos",
+          "group": "2_cmd@2"
+        },
+        {
+          "command": "mf.ibmi.runCl",
+          "when": "viewItem == profile-ibmi",
+          "group": "2_cmd@1"
+        },
+        {
+          "command": "mf.ibmi.runSql",
+          "when": "viewItem == profile-ibmi",
+          "group": "2_cmd@2"
+        },
+        {
+          "command": "mf.ibmi.terminal",
+          "when": "viewItem == profile-ibmi",
+          "group": "2_cmd@3"
+        },
+        {
+          "command": "mf.refresh",
+          "when": "viewItem =~ /^(zos|ibmi)-(dsRoot|ussRoot|jobRoot|libRoot|ifsRoot|spoolRoot|jobsRoot|dsFilter|jobFilter|ussPath|ds-po|ussDir|lib|srcpf|ifsDir|ifsPath|libFilter)/",
+          "group": "inline@9"
+        },
+        {
+          "command": "mf.zos.addDsFilter",
+          "when": "viewItem == zos-dsRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.zos.createDataset",
+          "when": "viewItem == zos-dsRoot || viewItem == zos-dsFilter",
+          "group": "1_new@1"
+        },
+        {
+          "command": "mf.zos.addUssPath",
+          "when": "viewItem == zos-ussRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.zos.addJobFilter",
+          "when": "viewItem == zos-jobRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.removeFilter",
+          "when": "viewItem =~ /^(zos-dsFilter|zos-jobFilter|zos-ussPath|ibmi-libFilter|ibmi-ifsPath)$/",
+          "group": "inline@8"
+        },
+        {
+          "command": "mf.zos.createMember",
+          "when": "viewItem == zos-ds-po",
+          "group": "1_new@1"
+        },
+        {
+          "command": "mf.zos.uploadFile",
+          "when": "viewItem == zos-ds-po || viewItem == zos-ussDir || viewItem == zos-ussPath",
+          "group": "1_new@2"
+        },
+        {
+          "command": "mf.zos.createUssFile",
+          "when": "viewItem == zos-ussDir || viewItem == zos-ussPath",
+          "group": "1_new@1"
+        },
+        {
+          "command": "mf.zos.createUssDir",
+          "when": "viewItem == zos-ussDir || viewItem == zos-ussPath",
+          "group": "1_new@2"
+        },
+        {
+          "command": "mf.zos.submitMember",
+          "when": "viewItem == zos-member || viewItem == zos-ds-ps",
+          "group": "2_run@1"
+        },
+        {
+          "command": "mf.zos.delete",
+          "when": "viewItem =~ /^zos-(member|ds-ps|ds-po|ussFile|ussDir)$/",
+          "group": "9_del@1"
+        },
+        {
+          "command": "mf.zos.cancelJob",
+          "when": "viewItem == zos-job",
+          "group": "2_job@1"
+        },
+        {
+          "command": "mf.zos.purgeJob",
+          "when": "viewItem == zos-job",
+          "group": "2_job@2"
+        },
+        {
+          "command": "mf.zos.downloadAllSpool",
+          "when": "viewItem == zos-job",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.ibmi.addLibrary",
+          "when": "viewItem == ibmi-libRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.ibmi.addIfsPath",
+          "when": "viewItem == ibmi-ifsRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.ibmi.createSrcFile",
+          "when": "viewItem == ibmi-libFilter",
+          "group": "1_new@1"
+        },
+        {
+          "command": "mf.ibmi.createMember",
+          "when": "viewItem == ibmi-srcpf",
+          "group": "1_new@1"
+        },
+        {
+          "command": "mf.ibmi.compile",
+          "when": "viewItem == ibmi-member",
+          "group": "inline@1"
+        },
+        {
+          "command": "mf.ibmi.compile",
+          "when": "viewItem == ibmi-member",
+          "group": "2_run@1"
+        },
+        {
+          "command": "mf.ibmi.deleteMember",
+          "when": "viewItem == ibmi-member",
+          "group": "9_del@1"
+        },
+        {
+          "command": "mf.ibmi.createIfsFile",
+          "when": "viewItem == ibmi-ifsDir || viewItem == ibmi-ifsPath",
+          "group": "1_new@1"
+        },
+        {
+          "command": "mf.ibmi.createIfsDir",
+          "when": "viewItem == ibmi-ifsDir || viewItem == ibmi-ifsPath",
+          "group": "1_new@2"
+        },
+        {
+          "command": "mf.ibmi.deleteIfs",
+          "when": "viewItem == ibmi-ifsFile || viewItem == ibmi-ifsDir",
+          "group": "9_del@1"
+        },
+        {
+          "command": "mf.ibmi.deleteSpool",
+          "when": "viewItem == ibmi-spool",
+          "group": "9_del@1"
+        },
+        {
+          "command": "mf.ibmi.endJob",
+          "when": "viewItem == ibmi-job",
+          "group": "2_job@1"
+        },
+        {
+          "command": "mf.ibmi.showJobLog",
+          "when": "viewItem == ibmi-job",
+          "group": "inline@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "mf.zos.submitJcl",
+          "when": "editorLangId == jcl",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mf.ibmi.compileEditor",
+          "when": "resourceScheme == mf && resourcePath =~ /\\/ibmimbr\\//",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mf.ibmi.runSqlEditor",
+          "when": "editorLangId == sql",
+          "group": "navigation@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "mf.zos.submitJcl",
+          "when": "editorLangId == jcl",
+          "group": "mf@1"
+        },
+        {
+          "command": "mf.ibmi.runSqlEditor",
+          "when": "editorLangId == sql",
+          "group": "mf@2"
+        },
+        {
+          "command": "mf.ibmi.compileEditor",
+          "when": "resourceScheme == mf && resourcePath =~ /\\/ibmimbr\\//",
+          "group": "mf@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "mf.removeFilter",
+          "when": "false"
+        },
+        {
+          "command": "mf.refresh",
+          "when": "false"
+        },
+        {
+          "command": "mf.zos.delete",
+          "when": "false"
+        },
+        {
+          "command": "mf.zos.cancelJob",
+          "when": "false"
+        },
+        {
+          "command": "mf.zos.purgeJob",
+          "when": "false"
+        },
+        {
+          "command": "mf.zos.downloadAllSpool",
+          "when": "false"
+        },
+        {
+          "command": "mf.zos.submitMember",
+          "when": "false"
+        },
+        {
+          "command": "mf.ibmi.deleteMember",
+          "when": "false"
+        },
+        {
+          "command": "mf.ibmi.deleteIfs",
+          "when": "false"
+        },
+        {
+          "command": "mf.ibmi.deleteSpool",
+          "when": "false"
+        },
+        {
+          "command": "mf.ibmi.endJob",
+          "when": "false"
+        },
+        {
+          "command": "mf.ibmi.showJobLog",
+          "when": "false"
+        },
+        {
+          "command": "mf.ibmi.compile",
+          "when": "false"
+        },
+        {
+          "command": "mf.zos.recall",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "mf.zos.submitJcl",
+        "key": "ctrl+alt+s",
+        "when": "editorLangId == jcl"
+      },
+      {
+        "command": "mf.ibmi.compileEditor",
+        "key": "ctrl+e",
+        "mac": "cmd+e",
+        "when": "resourceScheme == mf && resourcePath =~ /\\/ibmimbr\\//"
+      },
+      {
+        "command": "mf.ibmi.runSqlEditor",
+        "key": "ctrl+r",
+        "mac": "cmd+r",
+        "when": "editorLangId == sql"
+      }
+    ],
+    "configuration": {
+      "title": "IBM i & z/OS Explorer",
+      "properties": {
+        "mainframe.zos.maxItems": {
+          "type": "number",
+          "default": 500,
+          "description": "Maximum number of data sets / jobs returned per list request."
+        },
+        "mainframe.zos.encoding": {
+          "type": "string",
+          "default": "",
+          "description": "Optional EBCDIC code page for data set read/write (e.g. IBM-1047, IBM-037). Empty = z/OSMF default."
+        },
+        "mainframe.zos.tsoAccount": {
+          "type": "string",
+          "default": "ACCT#",
+          "description": "TSO account number used to start a TSO address space."
+        },
+        "mainframe.zos.tsoProc": {
+          "type": "string",
+          "default": "IKJACCNT",
+          "description": "TSO logon procedure."
+        },
+        "mainframe.ibmi.tempDir": {
+          "type": "string",
+          "default": "/tmp",
+          "description": "IFS directory used for temporary files when reading/writing source members."
+        },
+        "mainframe.ibmi.sourceCcsid": {
+          "type": "number",
+          "default": 1208,
+          "description": "Stream file CCSID used when transferring source members (1208 = UTF-8)."
+        },
+        "mainframe.ibmi.compileCommands": {
+          "type": "object",
+          "description": "Compile command per source type. Variables: &LIB, &FILE, &MBR, &OBJLIB.",
+          "default": {
+            "RPGLE": "CRTBNDRPG PGM(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR) DBGVIEW(*SOURCE) OPTION(*EVENTF)",
+            "SQLRPGLE": "CRTSQLRPGI OBJ(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR) OBJTYPE(*PGM) DBGVIEW(*SOURCE) OPTION(*EVENTF)",
+            "RPG": "CRTRPGPGM PGM(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "CLLE": "CRTBNDCL PGM(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR) DBGVIEW(*SOURCE)",
+            "CLP": "CRTCLPGM PGM(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "CBLLE": "CRTBNDCBL PGM(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR) DBGVIEW(*SOURCE)",
+            "SQLCBLLE": "CRTSQLCBLI OBJ(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR) OBJTYPE(*PGM)",
+            "PF": "CRTPF FILE(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "LF": "CRTLF FILE(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "DSPF": "CRTDSPF FILE(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "PRTF": "CRTPRTF FILE(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "CMD": "CRTCMD CMD(&OBJLIB/&MBR) PGM(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)",
+            "SQL": "RUNSQLSTM SRCFILE(&LIB/&FILE) SRCMBR(&MBR) COMMIT(*NONE) NAMING(*SQL)",
+            "MODULE": "CRTRPGMOD MODULE(&OBJLIB/&MBR) SRCFILE(&LIB/&FILE) SRCMBR(&MBR)"
+          }
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "jcl",
+        "aliases": [
+          "JCL"
+        ],
+        "extensions": [
+          ".jcl",
+          ".cntl"
+        ],
+        "configuration": "./syntaxes/jcl.language-configuration.json"
+      },
+      {
+        "id": "cl",
+        "aliases": [
+          "CL",
+          "CLLE"
+        ],
+        "extensions": [
+          ".clle",
+          ".clp",
+          ".cl"
+        ],
+        "configuration": "./syntaxes/cl.language-configuration.json"
+      },
+      {
+        "id": "rpgle",
+        "aliases": [
+          "RPGLE",
+          "RPG"
+        ],
+        "extensions": [
+          ".rpgle",
+          ".sqlrpgle",
+          ".rpg",
+          ".rpgleinc"
+        ],
+        "configuration": "./syntaxes/rpgle.language-configuration.json"
+      },
+      {
+        "id": "cobol",
+        "aliases": [
+          "COBOL"
+        ],
+        "extensions": [
+          ".cbl",
+          ".cob",
+          ".cobol",
+          ".cpy",
+          ".cblle",
+          ".sqlcblle"
+        ],
+        "configuration": "./syntaxes/cobol.language-configuration.json"
+      },
+      {
+        "id": "dds",
+        "aliases": [
+          "DDS"
+        ],
+        "extensions": [
+          ".pf",
+          ".lf",
+          ".dspf",
+          ".prtf"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jcl",
+        "scopeName": "source.jcl",
+        "path": "./syntaxes/jcl.tmLanguage.json"
+      },
+      {
+        "language": "cl",
+        "scopeName": "source.cl",
+        "path": "./syntaxes/cl.tmLanguage.json"
+      },
+      {
+        "language": "rpgle",
+        "scopeName": "source.rpgle",
+        "path": "./syntaxes/rpgle.tmLanguage.json"
+      },
+      {
+        "language": "cobol",
+        "scopeName": "source.cobol",
+        "path": "./syntaxes/cobol.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p . --noEmit && node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "check-types": "tsc -p . --noEmit",
+    "vscode:prepublish": "tsc -p . --noEmit && node esbuild.js --production",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/ssh2": "^1.15.0",
+    "@types/vscode": "~1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  },
+  "bugs": {
+    "url": "https://github.com/gauravgupta0612/IBM-i-z-OS-Explorer/issues"
+  },
+  "homepage": "https://github.com/gauravgupta0612/IBM-i-z-OS-Explorer#readme"
+}

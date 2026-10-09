@@ -1,0 +1,25 @@
+{
+ "comments": {
+  "lineComment": "//"
+ },
+ "brackets": [
+  [
+   "(",
+   ")"
+  ]
+ ],
+ "autoClosingPairs": [
+  {
+   "open": "(",
+   "close": ")"
+  },
+  {
+   "open": "'",
+   "close": "'"
+  }
+ ],
+ "indentationRules": {
+  "increaseIndentPattern": "^\\s*(?i:if|dow|dou|for|select|when|other|else|elseif|monitor|on-error|begsr|dcl-proc|dcl-pi|dcl-pr|dcl-ds)\\b",
+  "decreaseIndentPattern": "^\\s*(?i:end\\w*|else|elseif|when|other|on-error)\\b"
+ }
+}

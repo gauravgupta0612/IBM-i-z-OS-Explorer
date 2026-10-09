@@ -1,0 +1,34 @@
+{
+  // Press F5 to start a new VS Code window ("Extension Development Host")
+  // with the extension loaded. Breakpoints in src/*.ts work.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension (F5)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "sourceMaps": true,
+      "preLaunchTask": "npm: compile"
+    },
+    {
+      "name": "Run Extension (watch mode)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "sourceMaps": true,
+      "preLaunchTask": "npm: watch"
+    },
+    {
+      "name": "Run Extension (other extensions disabled)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--disable-extensions"],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "sourceMaps": true,
+      "preLaunchTask": "npm: compile"
+    }
+  ]
+}

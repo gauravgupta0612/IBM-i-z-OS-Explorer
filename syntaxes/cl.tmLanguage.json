@@ -1,0 +1,40 @@
+{
+ "scopeName": "source.cl",
+ "name": "CL",
+ "patterns": [
+  {
+   "begin": "/\\*",
+   "end": "\\*/",
+   "name": "comment.block.cl"
+  },
+  {
+   "begin": "'",
+   "end": "'",
+   "name": "string.quoted.single.cl"
+  },
+  {
+   "match": "(?i)\\b(PGM|ENDPGM|DCL|DCLF|DCLPRCOPT|IF|THEN|ELSE|DO|ENDDO|DOWHILE|DOUNTIL|DOFOR|ITERATE|LEAVE|SELECT|WHEN|OTHERWISE|ENDSELECT|GOTO|RETURN|CALLSUBR|SUBR|ENDSUBR|MONMSG|CHGVAR|RCVF|SNDF|SNDRCVF|CALL|CALLPRC|INCLUDE)\\b",
+   "name": "keyword.control.cl"
+  },
+  {
+   "match": "&[A-Za-z#$@][A-Za-z0-9#$@_]*",
+   "name": "variable.other.cl"
+  },
+  {
+   "match": "\\*(?i:EQ|NE|GT|LT|GE|LE|AND|OR|NOT|CAT|BCAT|TCAT|CHAR|DEC|LGL|INT|UINT|PTR)\\b",
+   "name": "keyword.operator.cl"
+  },
+  {
+   "match": "\\*[A-Za-z]+",
+   "name": "constant.language.cl"
+  },
+  {
+   "match": "\\b[A-Za-z][A-Za-z0-9]*(?=\\()",
+   "name": "variable.parameter.cl"
+  },
+  {
+   "match": "\\b\\d+(\\.\\d+)?\\b",
+   "name": "constant.numeric.cl"
+  }
+ ]
+}
